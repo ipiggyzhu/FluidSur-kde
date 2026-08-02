@@ -9,7 +9,7 @@ FluidSur 是由 FluidSur Project 独立设计、维护和发布的 KDE Plasma �
 - Plasma 全局主题：`FluidSur`、`FluidSur-alt`、`FluidSur-dark`
 - Plasma 桌面主题、配色方案、Aurorae 窗口装饰和 Kvantum 样式
 - FluidSur 壁纸、登录界面（SDDM）和启动画面资源
-- FluidSur 图标覆盖与自包含光标主题
+- 完整的 FluidSur、FluidSur-light、FluidSur-dark 图标主题与自包含光标主题
 - 分离数字时钟、电源小组件、紧凑性能监控表盘和中文翻译
 
 ## 安装
@@ -63,10 +63,10 @@ sudo ./sddm/install.sh --uninstall
 - 主题主体支持 KDE Plasma 5 或 6；FluidSur 电源小组件和紧凑性能监控表盘面向 Plasma 6。
 - SDDM 脚本会根据当前 Plasma 版本选择对应 QML 主题。
 - 透明控件需要 Kvantum（发行版通常以 `kvantum` 或 `kvantum-manager` 提供）。
-- 图标主题以 Breeze 和 Hicolor 作为系统回退，不依赖其他第三方图标主题。
+- 三套 FluidSur 图标资源随仓库提供，运行和安装时不从 WhiteSur 或其他第三方仓库下载；Breeze 和 Hicolor 仅作为系统缺失图标的标准回退。
 - 安装脚本不会修改 KWin 的动画开关，也不会强制开启“吸入/吸出”效果。
 - 不会打包当前用户的天气位置、面板实例或显示器布局，避免把个人配置带给其他用户。
 
 ## 许可与来源
 
-FluidSur 由 FluidSur Project 独立维护。项目早期版本参考并使用了 WhiteSur KDE 的可再分发资源；根目录 `LICENSE`、各组件许可证及 [NOTICE.md](NOTICE.md) 中的第三方说明仍适用于对应文件。
+FluidSur 由 FluidSur Project 独立维护。项目早期版本参考并使用了 WhiteSur KDE 的可再分发资源；完整图标集基于 GPL-3.0 的 WhiteSur Icon Theme 修改。根目录 `LICENSE`、各组件许可证、图标目录中的原始许可证及 [NOTICE.md](NOTICE.md) 仍适用于对应文件。

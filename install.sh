@@ -99,10 +99,19 @@ install_kvantum_and_wallpapers() {
 }
 
 install_icons() {
-  remove_path "$ICONS_DIR/$THEME_NAME"
-  remove_path "$ICONS_DIR/$THEME_NAME-cursors"
-  cp -a "$SRC_DIR/icons/$THEME_NAME" "$ICONS_DIR/"
-  cp -a "$SRC_DIR/icons/$THEME_NAME-cursors" "$ICONS_DIR/"
+  local icon_theme
+
+  for icon_theme in "$THEME_NAME" "$THEME_NAME-light" "$THEME_NAME-dark" "$THEME_NAME-cursors"; do
+    [[ -d "$SRC_DIR/icons/$icon_theme" ]] || die "Missing icon theme: $icon_theme"
+    remove_path "$ICONS_DIR/$icon_theme"
+    cp -a "$SRC_DIR/icons/$icon_theme" "$ICONS_DIR/"
+  done
+
+  if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    for icon_theme in "$THEME_NAME" "$THEME_NAME-light" "$THEME_NAME-dark"; do
+      gtk-update-icon-cache --force "$ICONS_DIR/$icon_theme" >/dev/null
+    done
+  fi
 }
 
 install_plasma_theme() {

@@ -56,6 +56,8 @@ remove_glob \
   "$KVANTUM_DIR"/FluidSur* \
   "$WALLPAPER_DIR"/FluidSur* \
   "$ICONS_DIR/FluidSur" \
+  "$ICONS_DIR/FluidSur-light" \
+  "$ICONS_DIR/FluidSur-dark" \
   "$ICONS_DIR/FluidSur-cursors" \
   "$LATTE_DIR/FluidSur.layout.latte" \
   "$PLASMOIDS_DIR/org.fluidsur.plasma.battery" \
