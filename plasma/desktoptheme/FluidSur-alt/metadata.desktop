@@ -1,0 +1,35 @@
+[Desktop Entry]
+Name=FluidSur-alt
+Comment=FluidSur desktop theme for KDE Plasma
+
+X-KDE-PluginInfo-Author=FluidSur Project
+X-KDE-PluginInfo-Category=
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-Email=fluidsur@local
+X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-PluginInfo-License=GPL3.0
+X-KDE-PluginInfo-Name=FluidSur-alt
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=
+X-Plasma-API=5.0
+
+[Wallpaper]
+defaultWallpaperTheme=FluidSur-light
+defaultFileSuffix=.png
+defaultHeight=2160
+defaultWidth=3840
+
+[ContrastEffect]
+enabled=false
+contrast=0.3
+intensity=1.9
+saturation=1.9
+
+[AdaptiveTransparency]
+enabled = true
+
+[Settings]
+FallbackTheme=oxygen
+
+[BlurBehindEffect]
+enabled=true

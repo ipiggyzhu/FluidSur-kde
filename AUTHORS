@@ -1,0 +1,19 @@
+FluidSur KDE
+============
+
+FluidSur Project
+  Branding, KDE Plasma integration, Chinese localization, custom power applet,
+  sensor face, packaging, and subsequent modifications.
+
+Third-party contributors
+------------------------
+
+WhiteSur KDE and related artwork
+  Vince Liuice (https://github.com/vinceliuice)
+
+KDE Plasma components used as adaptation bases
+  KDE contributors listed in the individual component metadata and source files.
+
+Capitaine/WhiteSur cursor artwork
+  Original contributors listed by the bundled cursor project's license and
+  original project records.

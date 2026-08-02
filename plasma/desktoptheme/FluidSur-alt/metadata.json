@@ -1,0 +1,21 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "fluidsur@local",
+                "Name": "FluidSur Project"
+            }
+        ],
+        "Category": "Plasma 6.0 theme",
+        "Description": "FluidSur by FluidSur Project",
+        "Description[zh_CN]": "FluidSur 主题，由 FluidSur Project 设计制作",
+        "EnabledByDefault": true,
+        "Id": "FluidSur-alt",
+        "License": "GPL-3.0",
+        "Name": "FluidSur-alt",
+        "Name[zh_CN]": "FluidSur-alt",
+        "Version": "6.2.0",
+        "Website": "https://github.com/ipiggyzhu/FluidSur-kde"
+    },
+    "X-Plasma-API": "5.0"
+}

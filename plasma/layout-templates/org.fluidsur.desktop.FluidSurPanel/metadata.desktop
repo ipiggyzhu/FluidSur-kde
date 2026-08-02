@@ -1,0 +1,17 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=FluidSur Panel
+Name[zh_CN]=FluidSur 面板
+Type=Service
+ServiceTypes=Plasma/LayoutTemplate
+X-Plasma-Shell=plasmashell
+X-Plasma-ContainmentCategories=panel
+X-KDE-PluginInfo-Author=FluidSur Project
+X-KDE-PluginInfo-Email=fluidsur@hotmail.com
+X-KDE-PluginInfo-Name=org.fluidsur.desktop.FluidSurPanel
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Category=
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL 3.0
+X-KDE-PluginInfo-EnabledByDefault=true
