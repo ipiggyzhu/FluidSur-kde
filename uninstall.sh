@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly ROOT_UID=0
 readonly THEME_NAME="FluidSur"
+readonly SRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 if (( EUID == ROOT_UID )); then
   AURORAE_DIR="/usr/share/aurorae/themes"
@@ -17,6 +18,7 @@ if (( EUID == ROOT_UID )); then
   LAYOUTS_DIR="/usr/share/plasma/layout-templates"
   SENSORFACES_DIR="/usr/share/ksysguard/sensorfaces"
   LOCALE_DIR="/usr/share/locale"
+  THEMES_DIR="/usr/share/themes"
 else
   AURORAE_DIR="$HOME/.local/share/aurorae/themes"
   SCHEMES_DIR="$HOME/.local/share/color-schemes"
@@ -29,6 +31,7 @@ else
   LAYOUTS_DIR="$HOME/.local/share/plasma/layout-templates"
   SENSORFACES_DIR="$HOME/.local/share/ksysguard/sensorfaces"
   LOCALE_DIR="$HOME/.local/share/locale"
+  THEMES_DIR="$HOME/.themes"
 fi
 
 readonly LATTE_DIR="$HOME/.config/latte"
@@ -69,5 +72,22 @@ remove_glob \
 for scheme in "$SCHEMES_DIR"/FluidSur*.colors; do
   [[ -e "$scheme" ]] && remove_path "$scheme"
 done
+
+for theme in "$THEMES_DIR"/FluidSur-*; do
+  [[ -d "$theme" ]] && remove_path "$theme"
+done
+
+# The libadwaita override lives outside THEMES_DIR, so let the GTK component
+# clean up after itself when it is available.
+if [[ -f "$SRC_DIR/gtk/install.sh" ]]; then
+  bash "$SRC_DIR/gtk/install.sh" --dest "$THEMES_DIR" --remove >/dev/null 2>&1 || true
+fi
+
+# Likewise for Firefox, which keeps its theme inside the browser profile. Only
+# meaningful as the profile's owner, and only touches a chrome/ this project
+# created, restoring whatever was there before.
+if [[ -f "$SRC_DIR/firefox/install.sh" && $EUID -ne 0 ]]; then
+  bash "$SRC_DIR/firefox/install.sh" --remove >/dev/null 2>&1 || true
+fi
 
 printf "Uninstall finished.\n"

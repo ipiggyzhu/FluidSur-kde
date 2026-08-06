@@ -18,6 +18,7 @@ if (( EUID == ROOT_UID )); then
   LAYOUTS_DIR="/usr/share/plasma/layout-templates"
   SENSORFACES_DIR="/usr/share/ksysguard/sensorfaces"
   LOCALE_DIR="/usr/share/locale"
+  THEMES_DIR="/usr/share/themes"
 else
   AURORAE_DIR="$HOME/.local/share/aurorae/themes"
   SCHEMES_DIR="$HOME/.local/share/color-schemes"
@@ -30,6 +31,7 @@ else
   LAYOUTS_DIR="$HOME/.local/share/plasma/layout-templates"
   SENSORFACES_DIR="$HOME/.local/share/ksysguard/sensorfaces"
   LOCALE_DIR="$HOME/.local/share/locale"
+  THEMES_DIR="$HOME/.themes"
 fi
 
 readonly LATTE_DIR="$HOME/.config/latte"
@@ -51,12 +53,19 @@ Options:
   -w, --window VARIANT...  Install default, opaque and/or sharp decorations
       --sharp              Alias for --window sharp
       --opaque             Alias for --window opaque
+      --no-gtk             Skip the GTK theme (GTK apps keep whatever GTK theme
+                           is already selected)
+      --firefox [MODE]     Also theme Firefox. MODE is 'full' (default) or
+                           'buttons' for the window buttons only. Off unless
+                           asked for, because it rewrites the browser profile's
+                           chrome/ directory.
   -h, --help               Show this help
 
 Examples:
   $0
   $0 --color dark
   $0 --window opaque
+  $0 --firefox
   sudo $0
   sudo ./sddm/install.sh
 EOF
@@ -75,6 +84,51 @@ remove_path() {
   if [[ -e "$1" || -L "$1" ]]; then
     rm -rf -- "$1"
   fi
+}
+
+# Builds and installs the GTK half of FluidSur. Kept non-fatal on purpose: the
+# GTK build needs sassc and glib-compile-resources, and a machine missing those
+# should still get a complete KDE install.
+install_gtk_theme() {
+  local installer="$SRC_DIR/gtk/install.sh"
+
+  if [[ ! -f "$installer" ]]; then
+    printf "  GTK component not present, skipping.\n"
+    return 0
+  fi
+
+  local missing=()
+  command -v sassc >/dev/null || missing+=("sassc")
+  command -v glib-compile-resources >/dev/null || missing+=("glib2-devel")
+
+  if (( ${#missing[@]} > 0 )); then
+    printf "  Skipping GTK theme, missing: %s\n" "${missing[*]}"
+    printf "  Fedora: sudo dnf install sassc glib2-devel\n"
+    return 0
+  fi
+
+  bash "$installer" --dest "$THEMES_DIR" || printf "  GTK theme build failed, continuing.\n"
+}
+
+# Firefox draws its own window buttons and ignores the GTK theme for them, so it
+# needs a userChrome.css of its own. Always per-user: a browser profile lives in
+# $HOME even when this script runs under sudo.
+install_firefox_theme() {
+  local installer="$SRC_DIR/firefox/install.sh"
+
+  if [[ ! -f "$installer" ]]; then
+    printf "  Firefox component not present, skipping.\n"
+    return 0
+  fi
+
+  if (( EUID == 0 )); then
+    printf "  Refusing to touch a browser profile as root.\n"
+    printf "  Run '%s --firefox' as your own user instead.\n" "$installer"
+    return 0
+  fi
+
+  bash "$installer" --mode "${firefox_mode:-full}" \
+    || printf "  Firefox theme install failed, continuing.\n"
 }
 
 install_kvantum_and_wallpapers() {
@@ -238,6 +292,14 @@ while (( $# > 0 )); do
       ;;
     --sharp) requested_windows+=("-sharp"); shift;;
     --opaque) requested_windows+=("-opaque"); install_opaque=true; shift;;
+    --no-gtk) install_gtk=false; shift;;
+    --firefox)
+      install_firefox=true
+      shift
+      case "${1:-}" in
+        full|buttons) firefox_mode="$1"; shift;;
+      esac
+      ;;
     -h|--help) usage; exit 0;;
     *) die "Unknown option '$1' (use --help)";;
   esac
@@ -272,5 +334,15 @@ for color in "${requested_colors[@]}"; do
     done
   done
 done
+
+if [[ "${install_gtk:-true}" == true ]]; then
+  printf "Installing '%s GTK theme'...\n" "$THEME_NAME"
+  install_gtk_theme
+fi
+
+if [[ "${install_firefox:-false}" == true ]]; then
+  printf "Installing '%s Firefox theme'...\n" "$THEME_NAME"
+  install_firefox_theme
+fi
 
 printf "Install finished.\n"

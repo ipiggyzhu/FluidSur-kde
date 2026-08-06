@@ -23,6 +23,22 @@ installed icon theme.
 The FluidSur power applet and compact sensor face are adaptations of KDE Plasma
 components. Their original author and license metadata remains in each package.
 
+The GTK component under `gtk/` is adapted from WhiteSur GTK Theme by Vince
+Liuice, licensed under the MIT license:
+
+https://github.com/vinceliuice/WhiteSur-gtk-theme
+
+The imported source revision is `3bd1b21`. FluidSur Project rebranded it,
+removed the GNOME Shell, Cinnamon, Xfwm4, Metacity and Unity components that do
+not apply to Plasma, and replaced the installer on 2026-08-04. The original MIT
+license text is retained at `gtk/COPYING`.
+
+The Firefox component under `firefox/` is adapted from the `other/firefox`
+directory of the same project, revision `3bd1b21`, also MIT. FluidSur Project
+rebranded it, dropped the Monterey variant, and replaced the installer with one
+that does not delete the profile's `user.js` and does not kill a running
+browser, on 2026-08-04.
+
 Individual wallpapers, SDDM assets, Plasma components, and artwork may carry
 their own license declarations in package metadata. Those declarations take
 precedence for the corresponding files.

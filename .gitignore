@@ -1,2 +1,11 @@
 **/icon-theme.cache
 **/.icon-theme.cache
+
+# GTK build artefacts
+gtk/.build/
+gtk/src/sass/_gtk-base-temp.scss
+gtk/src/sass/_theme-options-temp.scss
+gtk/src/main/*/*.css
+
+# Local tooling
+.memsearch/
