@@ -3,7 +3,8 @@
 set -euo pipefail
 
 readonly ROOT_UID=0
-readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 readonly THEME_DIR="${SDDM_THEME_DIR:-/usr/share/sddm/themes}"
 readonly THEME_NAME="FluidSur"
 

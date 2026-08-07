@@ -16,7 +16,21 @@ FluidSur 是由 FluidSur Project 独立设计、维护和发布的 KDE Plasma �
 
 ## 安装
 
-解压源码后，在源码根目录运行：
+一行安装，不需要先克隆仓库：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ipiggyzhu/FluidSur-kde/main/net-install.sh | bash
+```
+
+安装脚本的参数可以直接透传，例如装深色变体并立刻应用：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ipiggyzhu/FluidSur-kde/main/net-install.sh | bash -s -- --color dark --apply
+```
+
+它会把仓库快照下载到临时目录、调用其中的 `install.sh`，然后清理干净；除了 `bash`、`tar` 和 `curl`（或 `wget`）之外不需要别的东西。想指定分支或标签，设 `FLUIDSUR_REF`。
+
+如果你更愿意先看代码再执行——推荐这样——把脚本存下来读一遍再跑，或者直接克隆仓库。解压源码后，在源码根目录运行：
 
 ```sh
 ./install.sh
@@ -34,9 +48,13 @@ sudo ./install.sh
 ./install.sh --color dark
 ./install.sh --window opaque
 ./install.sh --window sharp
+./install.sh --apply
+./install.sh --check
 ```
 
-`--sharp` 和 `--opaque` 也可作为快捷写法。安装完成后，在“系统设置 → 外观 → 全局主题”中选择 FluidSur 变体；Kvantum 样式可在 `kvantummanager` 中选择 `FluidSur`。
+`--sharp` 和 `--opaque` 也可作为快捷写法。`--apply` 装完直接选中主题，省掉去系统设置里点一遍；它是按用户生效的状态，所以在 `sudo` 下会跳过。`--check` 只报告可选依赖的缺失情况并退出，不安装任何东西。
+
+不加 `--apply` 时，在“系统设置 → 外观 → 全局主题”中选择 FluidSur 变体；Kvantum 样式可在 `kvantummanager` 中选择 `FluidSur`。
 
 ### GTK 应用
 
@@ -99,7 +117,18 @@ sudo ./sddm/install.sh --uninstall
 
 - 主题主体支持 KDE Plasma 5 或 6；FluidSur 电源小组件和紧凑性能监控表盘面向 Plasma 6。
 - SDDM 脚本会根据当前 Plasma 版本选择对应 QML 主题。
-- 透明控件需要 Kvantum（发行版通常以 `kvantum` 或 `kvantum-manager` 提供）。
+- 全部依赖都是可选的：一个都不装也能装上完整的 KDE 部分，只是对应功能不生效。`./install.sh --check` 会按你的发行版报告缺什么、给出安装命令。
+- 透明控件需要 Kvantum。仓库里的 `Kvantum/FluidSur` 只是配置，真正做渲染的是 Kvantum 样式引擎；没装的话 Qt 控件会保持不透明，主题其余部分照常工作。
+
+  | 发行版 | 安装命令 |
+  | --- | --- |
+  | Fedora | `sudo dnf install kvantum` |
+  | Debian/Ubuntu | `sudo apt install qt6-style-kvantum` |
+  | Arch | `sudo pacman -S kvantum` |
+  | openSUSE | `sudo zypper install kvantum-qt6` |
+
+  装好后运行 `kvantummanager` 选择 `FluidSur`，或者在“系统设置 → 外观 → 应用程序风格”里选 `kvantum`。
+- GTK 主题构建需要 `sassc` 和 `glib-compile-resources`（Fedora: `sassc glib2-devel`）。缺少时 `install.sh` 会跳过 GTK 部分并提示，不影响 KDE 部分。
 - 三套 FluidSur 图标资源随仓库提供，运行和安装时不从 WhiteSur 或其他第三方仓库下载；Breeze 和 Hicolor 仅作为系统缺失图标的标准回退。
 - 安装脚本不会修改 KWin 的动画开关，也不会强制开启“吸入/吸出”效果。
 - 不会打包当前用户的天气位置、面板实例或显示器布局，避免把个人配置带给其他用户。

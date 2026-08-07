@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  shellcheck:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+
+      - name: Syntax check
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            bash -n "$f" || { echo "::error file=$f::bash -n failed"; fail=1; }
+          done < <(git ls-files '*.sh')
+          exit $fail
+
+      - name: Shellcheck
+        run: git ls-files '*.sh' | xargs -r shellcheck -S warning
+
+  install:
+    name: Install and uninstall
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y sassc libglib2.0-dev
+
+      - name: Dependency report
+        run: ./install.sh --check || true
+
+      - name: Install into a throwaway HOME
+        run: |
+          export HOME="$(mktemp -d)"
+          ./install.sh
+          for d in aurorae/themes color-schemes plasma/desktoptheme \
+                   plasma/look-and-feel wallpapers icons; do
+            test -d "$HOME/.local/share/$d" || { echo "::error::missing $d"; exit 1; }
+            test -n "$(ls -A "$HOME/.local/share/$d")" || { echo "::error::empty $d"; exit 1; }
+          done
+          echo "HOME=$HOME" >> "$GITHUB_ENV"
+
+      - name: Uninstall leaves nothing behind
+        run: |
+          ./uninstall.sh
+          leftover="$(find "$HOME" -maxdepth 6 -name 'FluidSur*' | wc -l)"
+          if [ "$leftover" -ne 0 ]; then
+            echo "::error::$leftover FluidSur entries survived uninstall"
+            find "$HOME" -maxdepth 6 -name 'FluidSur*'
+            exit 1
+          fi
+
+  assets:
+    name: Asset integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install checkers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-lxml python3-gi gir1.2-rsvg-2.0 python3-cairo
+
+      - name: Every SVG parses
+        run: |
+          python3 - <<'PY'
+          import os, sys
+          from lxml import etree
+          bad = []
+          for root in ("icons", "plasma", "aurorae", "firefox", "sddm", "wallpaper", "gtk"):
+              for dp, _, fs in os.walk(root):
+                  for f in fs:
+                      if not f.endswith(".svg"):
+                          continue
+                      p = os.path.join(dp, f)
+                      if os.path.islink(p):
+                          continue
+                      try:
+                          etree.parse(p)
+                      except Exception as e:
+                          bad.append((p, str(e)[:80]))
+          for p, e in bad:
+              print(f"::error file={p}::{e}")
+          print(f"{len(bad)} malformed SVG(s)")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Window buttons stay monochrome
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          DIRS = ["aurorae/common", "firefox/src/common/titlebuttons"]
+          hexes = re.compile(r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b")
+          bad = []
+          for root in DIRS:
+              for dp, _, fs in os.walk(root):
+                  for f in fs:
+                      if not f.endswith((".svg", ".css")):
+                          continue
+                      p = os.path.join(dp, f)
+                      for m in hexes.finditer(open(p, encoding="utf-8").read()):
+                          h = m.group(1)
+                          if len(h) == 3:
+                              h = "".join(c * 2 for c in h)
+                          r, g, b = (int(h[i:i+2], 16) for i in (0, 2, 4))
+                          if not (r == g == b):
+                              bad.append((p, "#" + h))
+          for p, h in sorted(set(bad)):
+              print(f"::error file={p}::non-grayscale colour {h}")
+          print(f"{len(set(bad))} non-grayscale colour(s)")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Icon themes inherit FluidSur before Breeze
+        run: |
+          python3 - <<'PY'
+          import configparser, sys
+          bad = []
+          for theme in ("FluidSur-light", "FluidSur-dark"):
+              cp = configparser.RawConfigParser(strict=False)
+              cp.read(f"icons/{theme}/index.theme", encoding="utf-8")
+              chain = [x.strip() for x in
+                       cp.get("Icon Theme", "Inherits", fallback="").split(",") if x.strip()]
+              if not chain or chain[0] != "FluidSur":
+                  bad.append((theme, chain))
+          for theme, chain in bad:
+              print(f"::error::{theme} inherits {chain}, expected FluidSur first")
+          sys.exit(1 if bad else 0)
+          PY

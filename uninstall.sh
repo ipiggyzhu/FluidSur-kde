@@ -4,7 +4,8 @@ set -euo pipefail
 
 readonly ROOT_UID=0
 readonly THEME_NAME="FluidSur"
-readonly SRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SRC_DIR
 
 if (( EUID == ROOT_UID )); then
   AURORAE_DIR="/usr/share/aurorae/themes"

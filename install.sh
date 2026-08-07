@@ -4,7 +4,8 @@ set -euo pipefail
 
 readonly ROOT_UID=0
 readonly THEME_NAME="FluidSur"
-readonly SRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly SRC_DIR
 
 if (( EUID == ROOT_UID )); then
   AURORAE_DIR="/usr/share/aurorae/themes"
@@ -38,7 +39,6 @@ readonly LATTE_DIR="$HOME/.config/latte"
 
 COLOR_VARIANTS=("" "-dark")
 PCOLOR_VARIANTS=("" "-alt" "-dark")
-WINDOW_VARIANTS=("" "-opaque" "-sharp")
 SCALE_VARIANTS=("" "_x1.25" "_x1.5" "_x1.75" "_x2.0")
 
 usage() {
@@ -59,6 +59,9 @@ Options:
                            'buttons' for the window buttons only. Off unless
                            asked for, because it rewrites the browser profile's
                            chrome/ directory.
+  -a, --apply              Select the theme once it is installed, instead of
+                           leaving that to System Settings
+      --check              Report missing optional dependencies and exit
   -h, --help               Show this help
 
 Examples:
@@ -66,6 +69,7 @@ Examples:
   $0 --color dark
   $0 --window opaque
   $0 --firefox
+  $0 --apply
   sudo $0
   sudo ./sddm/install.sh
 EOF
@@ -83,6 +87,96 @@ require_value() {
 remove_path() {
   if [[ -e "$1" || -L "$1" ]]; then
     rm -rf -- "$1"
+  fi
+}
+
+# Names the package that ships a missing command, for the distro we are on.
+# Everything reported here is optional: the KDE half of the theme installs
+# with none of it present.
+suggest_install() {
+  local -n names=$1
+  local hint=""
+
+  if command -v dnf >/dev/null; then
+    hint="sudo dnf install ${names[fedora]}"
+  elif command -v apt >/dev/null; then
+    hint="sudo apt install ${names[debian]}"
+  elif command -v pacman >/dev/null; then
+    hint="sudo pacman -S ${names[arch]}"
+  elif command -v zypper >/dev/null; then
+    hint="sudo zypper install ${names[suse]}"
+  fi
+
+  [[ -n "$hint" ]] && printf '    %s\n' "$hint"
+}
+
+check_dependencies() {
+  # Both tables are read by suggest_install through a nameref, which static
+  # analysis cannot follow.
+  # shellcheck disable=SC2034
+  local -A gtk_pkgs=(
+    [fedora]="sassc glib2-devel"
+    [debian]="sassc libglib2.0-dev"
+    [arch]="sassc glib2"
+    [suse]="sassc glib2-devel"
+  )
+  # shellcheck disable=SC2034
+  local -A kvantum_pkgs=(
+    [fedora]="kvantum"
+    [debian]="qt6-style-kvantum"
+    [arch]="kvantum"
+    [suse]="kvantum-qt6"
+  )
+  local complete=true
+
+  printf 'Optional dependencies:\n'
+
+  if command -v sassc >/dev/null && command -v glib-compile-resources >/dev/null; then
+    printf '  [ok]   GTK theme build\n'
+  else
+    complete=false
+    printf '  [skip] GTK theme build, needs sassc and glib-compile-resources\n'
+    suggest_install gtk_pkgs
+  fi
+
+  if [[ -d /usr/share/Kvantum ]] || command -v kvantummanager >/dev/null; then
+    printf '  [ok]   Kvantum, for translucent Qt widgets\n'
+  else
+    complete=false
+    printf '  [skip] Kvantum not detected, Qt widgets stay opaque\n'
+    suggest_install kvantum_pkgs
+  fi
+
+  if command -v plasma-apply-lookandfeel >/dev/null || command -v lookandfeeltool >/dev/null; then
+    printf '  [ok]   --apply support\n'
+  else
+    complete=false
+    printf '  [skip] no plasma-apply-lookandfeel, --apply will do nothing\n'
+  fi
+
+  [[ "$complete" == true ]]
+}
+
+# Selects the freshly installed global theme. Plasma 6 ships
+# plasma-apply-lookandfeel; Plasma 5 called the same thing lookandfeeltool.
+apply_theme() {
+  local pcolor="${requested_pcolors[0]:-}"
+  local package="com.github.fluidsur.$THEME_NAME$pcolor"
+  local tool
+
+  if command -v plasma-apply-lookandfeel >/dev/null; then
+    tool=(plasma-apply-lookandfeel --apply "$package")
+  elif command -v lookandfeeltool >/dev/null; then
+    tool=(lookandfeeltool --apply "$package")
+  else
+    printf '  No plasma-apply-lookandfeel found, select %s in System Settings.\n' "$package"
+    return 0
+  fi
+
+  if "${tool[@]}" >/dev/null 2>&1; then
+    printf '  Applied %s.\n' "$package"
+  else
+    printf '  Could not apply %s automatically, select it in System Settings.\n' "$package"
   fi
 }
 
@@ -293,6 +387,8 @@ while (( $# > 0 )); do
     --sharp) requested_windows+=("-sharp"); shift;;
     --opaque) requested_windows+=("-opaque"); install_opaque=true; shift;;
     --no-gtk) install_gtk=false; shift;;
+    -a|--apply) apply_after=true; shift;;
+    --check) check_dependencies; exit $?;;
     --firefox)
       install_firefox=true
       shift
@@ -343,6 +439,17 @@ fi
 if [[ "${install_firefox:-false}" == true ]]; then
   printf "Installing '%s Firefox theme'...\n" "$THEME_NAME"
   install_firefox_theme
+fi
+
+# Applying is per-user state, so it is meaningless under sudo: it would write
+# to root's kdeglobals and leave the invoking user's session untouched.
+if [[ "${apply_after:-false}" == true ]]; then
+  if (( EUID == ROOT_UID )); then
+    printf "Skipping --apply as root; run '%s --apply' as your own user.\n" "$0"
+  else
+    printf "Applying '%s'...\n" "$THEME_NAME"
+    apply_theme
+  fi
 fi
 
 printf "Install finished.\n"
