@@ -1,7 +1,7 @@
 [Icon Theme]
 Name=FluidSur-dark
 Comment=FluidSur dark icon theme for KDE Plasma and Linux desktops.
-Inherits=hicolor,breeze
+Inherits=FluidSur,hicolor,breeze-dark,breeze
 Example=folder
 
 # KDE/Plasma Stuff

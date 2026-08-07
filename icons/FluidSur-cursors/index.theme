@@ -1,2 +1,4 @@
 [Icon Theme]
 Name=FluidSur Cursors
+Comment=FluidSur cursor theme for KDE Plasma and Linux desktops.
+Inherits=Adwaita
